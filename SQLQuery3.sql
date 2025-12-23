@@ -1,52 +1,100 @@
-CREATE DATABASE Restaurant
-USE Restaurant
-CREATE TABLE Meals(
-Id INT PRIMARY KEY IDENTITY,
-[Name] NVARCHAR(50));
-ALTER TABLE Meals ADD Price NVARCHAR(50)
+CREATE DATABASE Restaurant;
+GO
 
-CREATE TABLE Tables(
-Id INT PRIMARY KEY IDENTITY,
-[No] NVARCHAR(50));
+USE Restaurant;
+GO
 
-CREATE TABLE Orders(
-Id INT,
-MealId INT,
-TableId INT,
-	PRIMARY KEY (MealId, TableId),
+
+CREATE TABLE Meals (
+    Id INT PRIMARY KEY IDENTITY,
+    [Name] NVARCHAR(50) NOT NULL,
+    Price DECIMAL(10,2) NOT NULL
+);
+GO
+
+
+CREATE TABLE Tables (
+    Id INT PRIMARY KEY IDENTITY,
+    [No] INT NOT NULL
+);
+GO
+
+
+CREATE TABLE Orders (
+    Id INT PRIMARY KEY IDENTITY,
+    MealId INT NOT NULL,
+    TableId INT NOT NULL,
+    DateTimeData DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (MealId) REFERENCES Meals(Id),
     FOREIGN KEY (TableId) REFERENCES Tables(Id)
 );
-ALTER TABLE Orders ADD DateTimeData DATETIME;
-ALTER TABLE Orders ADD ID INT;
+GO
 
-INSERT INTO Meals (Name, Price) VALUES
-('Pizza',20),('Steyk',35), ('Pasta',15);
-
-INSERT INTO Tables (No) VALUES
-(100),(101),(102)
-
-INSERT INTO Orders (MealId, TableId) VALUES
-(7,1),(8,1),(7,2),(7,3);
-
-SELECT 
-	m.*,
-	COUNT(s.id) AS Orders
-FROM Tables m
-LEFT JOIN Orders s
-	ON s.TableId=m.id
-GROUP BY m.id;
+INSERT INTO Meals ([Name], Price) VALUES
+('Pizza', 20.00),
+('Steyk', 35.00),
+('Pasta', 15.00);
+GO
 
 
-SELECT 
-    m.Tables,
-@@ -41,10 +93,11 @@ JOIN Tables g ON mg.TableId = g.TableId
-JOIN Orders ma ON m.MealsId = ma.MealsId
-JOIN Meals a ON ma.MealsId = a.MealsId;
+INSERT INTO Tables ([No]) VALUES
+(100), (101), (102);
+GO
+
+
+INSERT INTO Orders (MealId, TableId, DateTimeData) VALUES
+(1, 1, GETDATE()), 
+(2, 1, GETDATE()), 
+(1, 2, GETDATE()),  
+(1, 3, GETDATE());  
+GO
+
 
 SELECT 
+    t.Id,
+    t.[No] AS TableNumber,
+    COUNT(o.Id) AS OrderCount
+FROM Tables t
+LEFT JOIN Orders o ON o.TableId = t.Id
+GROUP BY t.Id, t.[No];
+GO
 
-	
+
+SELECT 
+    o.Id AS OrderId,
+    m.[Name] AS MealName,
+    m.Price,
+    t.[No] AS TableNumber,
+    o.DateTimeData AS OrderDateTime
+FROM Orders o
+JOIN Meals m ON o.MealId = m.Id
+JOIN Tables t ON o.TableId = t.Id;
+GO
+
+
+SELECT 
+    t.[No] AS TableNumber,
+    m.[Name] AS MealName,
+    m.Price,
+    COUNT(o.Id) AS TimesOrdered,
+    SUM(m.Price) AS TotalAmount
+FROM Orders o
+JOIN Meals m ON o.MealId = m.Id
+JOIN Tables t ON o.TableId = t.Id
+GROUP BY t.[No], m.[Name], m.Price
+ORDER BY t.[No];
+GO
+
+
+SELECT 
+    m.[Name] AS MealName,
+    COUNT(o.Id) AS TimesOrdered,
+    SUM(m.Price) AS TotalRevenue
+FROM Meals m
+LEFT JOIN Orders o ON o.MealId = m.Id
+GROUP BY m.Id, m.[Name]
+ORDER BY TimesOrdered DESC;
+GO
 
 
 
